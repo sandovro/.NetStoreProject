@@ -1,0 +1,26 @@
+[
+    {
+      "Name": "Item 1",
+      "Price": 4.99,
+      "Description": "3",
+      "Category": "4"
+    },
+    {
+      "Name": "Item 2",
+      "Price": 9.99,
+      "Description": "3",
+      "Category": "4"
+    },
+    {
+      "Name": "Item 3",
+      "Price": 3.49,
+      "Description": "3",
+      "Category": "4"
+    },
+    {
+      "Name": "Item 4",
+      "Price": 3.99,
+      "Description": "3",
+      "Category": "4"
+    }
+  ]

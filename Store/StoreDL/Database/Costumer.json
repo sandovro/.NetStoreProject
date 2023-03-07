@@ -1,0 +1,37 @@
+[
+  {
+    "CostumerId": 0,
+    "Name": "nc",
+    "Phone": "2",
+    "Address": "3",
+    "Email": "4"
+  },
+  {
+    "CostumerId": 0,
+    "Name": "m",
+    "Phone": "5",
+    "Address": "a",
+    "Email": "e"
+  },
+  {
+    "CostumerId": 0,
+    "Name": "g",
+    "Phone": "4",
+    "Address": "a",
+    "Email": "e"
+  },
+  {
+    "CostumerId": 0,
+    "Name": "a",
+    "Phone": "1",
+    "Address": "a",
+    "Email": "e"
+  },
+  {
+    "CostumerId": 0,
+    "Name": "jh",
+    "Phone": "151",
+    "Address": "gijyg",
+    "Email": "hoih"
+  }
+]

@@ -1,0 +1,86 @@
+name: Build, Test, and Deploy API
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build:
+
+    runs-on: windows-latest
+    environment:
+      name: 'Production'
+    defaults:
+      run:
+        working-directory: Store
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v1
+      with:
+        dotnet-version: 6.0.x
+        
+        
+    - name: Set up JDK 11
+      uses: actions/setup-java@v1
+      with:
+        java-version: 1.11
+    
+    - uses: actions/checkout@v2
+      with:
+        fetch-depth: 0  # Shallow clones should be disabled for a better relevancy of analysis
+    
+    # Just gets the necesarry packages for the SonarQube tool
+    - name: Cache SonarCloud packages
+      uses: actions/cache@v1
+      with:
+        path: ~\sonar\cache
+        key: ${{ runner.os }}-sonar
+        restore-keys: ${{ runner.os }}-sonar
+
+    - name: Cache SonarCloud scanner
+      id: cache-sonar-scanner
+      uses: actions/cache@v1
+      with:
+        path: .\.sonar\scanner
+        key: ${{ runner.os }}-sonar-scanner
+        restore-keys: ${{ runner.os }}-sonar-scanner
+        
+    - name: Install SonarCloud scanner
+      if: steps.cache-sonar-scanner.outputs.cache-hit != 'true'
+      shell: pwsh #NOTED: Changed from Powershell to pwsh
+      run: |
+          New-Item -Path .\.sonar\scanner -ItemType Directory
+          dotnet tool install dotnet-sonarscanner --version 5.5.3 --tool-path .\.sonar\scanner
+      
+        
+    - name: Restore dependencies
+      run: dotnet restore
+      
+    - name: Test
+      run: dotnet test --logger trx --collect:"XPlat Code Coverage" -- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Format=opencover
+      
+    - name: Build and analyze
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Needed to get PR information, if any
+        SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+      shell: pwsh
+      run: |
+          .\.sonar\scanner\dotnet-sonarscanner begin /k:"220118-Reston-NET_Roberto-Sandoval-P1" /o:"220118-reston-net" /d:sonar.login="${{ secrets.SONAR_TOKEN }}" /d:sonar.host.url="https://sonarcloud.io" /d:sonar.coverage.exclusions=**/StoreAPI/wwwroot/lib/**,**/**StoreDL/*.cs,**/StoreAPI/Controllers/*.cs,**/StoreAPI/*.cs /d:sonar.cs.opencover.reportsPaths="**/TestResults/**/coverage.opencover.xml" -d:sonar.vstest.reportsPath="**/TestResults/*.trx"
+          dotnet build ./StoreAPI -c Release
+          .\.sonar\scanner\dotnet-sonarscanner end /d:sonar.login="${{ secrets.SONAR_TOKEN }}"
+      
+    - name: Create Publish Folder
+      run: dotnet publish -c Release -o publish
+      
+    - name: Deploy
+      uses: azure/webapps-deploy@v2
+      with:
+        app-name: StoreWebApp
+        slot-name: 'Production'
+        publish-profile: $${{secrets.AZURE_WEBAPP}}
+        package: Store/publish
+      
